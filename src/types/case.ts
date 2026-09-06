@@ -239,6 +239,9 @@ export interface NotCheckable {
 export interface ReviewResult {
   verdict: 'match' | 'mismatch'
   finding_count: number
+  /** 各層實際查了幾格。沒有這個數字，「相符」就只是一句沒有份量的話 */
+  checked: { table1_internal: number; table1_to_table5_2: number; table5_2_to_table4: number }
+  checked_total: number
   layers: ReviewLayers
   not_checkable: NotCheckable[]
   price_impact: PriceImpact | null

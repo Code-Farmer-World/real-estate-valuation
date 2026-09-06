@@ -42,6 +42,35 @@ const allFindings = computed(() => {
   ]
 })
 
+/** 三層檢核的摘要。層名與法源對應作業手冊印刷頁 11–13 的審查重點 */
+const layerSummary = computed(() => {
+  const r = reviewed.value
+  if (!r) return []
+  return [
+    {
+      key: 'table1_internal',
+      name: '第一層　表1 內部',
+      basis: '量測值 vs 所填等級',
+      checked: r.checked.table1_internal,
+      findings: r.layers.table1_internal.length,
+    },
+    {
+      key: 'table1_to_table5_2',
+      name: '第二層　表1 → 表5-2',
+      basis: '審查重點第 vi 項：兩表等級須一致',
+      checked: r.checked.table1_to_table5_2,
+      findings: r.layers.table1_to_table5_2.length,
+    },
+    {
+      key: 'table5_2_to_table4',
+      name: '第三層　表5-2 → 表4',
+      basis: '審查重點第 vii 項：總修正數須相符',
+      checked: r.checked.table5_2_to_table4,
+      findings: r.layers.table5_2_to_table4.length,
+    },
+  ]
+})
+
 function onPick(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
@@ -116,6 +145,7 @@ function onDrop(event: DragEvent) {
         <div class="card" :class="reviewed?.verdict">
           <span class="k">審查結論</span>
           <span class="v">{{ reviewed?.verdict === 'match' ? '相符' : `${reviewed?.finding_count} 處不符` }}</span>
+          <span class="unit">逐格比對 {{ reviewed?.checked_total }} 格</span>
         </div>
       </section>
 
@@ -135,6 +165,15 @@ function onDrop(event: DragEvent) {
         <p v-if="reviewed?.price_impact?.diff_per_sqm" class="impact">
           單價差額 <b>{{ reviewed.price_impact.diff_per_sqm.toLocaleString() }}</b> 元/㎡
         </p>
+      </section>
+
+      <section v-if="reviewed" class="layers">
+        <div v-for="l in layerSummary" :key="l.key" class="layer-card" :class="{ bad: l.findings > 0 }">
+          <span class="ln">{{ l.name }}</span>
+          <span class="lc">{{ l.checked }} 格</span>
+          <span class="lr">{{ l.findings > 0 ? `${l.findings} 處不符` : '相符' }}</span>
+          <span class="lb">{{ l.basis }}</span>
+        </div>
       </section>
 
       <nav class="tabs">
@@ -348,6 +387,46 @@ h1 {
 .impact b {
   font-family: var(--mono);
   color: var(--bad);
+}
+
+.layers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.75rem;
+}
+.layer-card {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ok);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.layer-card.bad {
+  border-left-color: var(--bad);
+}
+.layer-card .ln {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.layer-card .lc {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.layer-card .lr {
+  font-size: 0.85rem;
+  color: var(--ok);
+  font-weight: 600;
+}
+.layer-card.bad .lr {
+  color: var(--bad);
+}
+.layer-card .lb {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .tabs {
