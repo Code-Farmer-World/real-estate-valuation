@@ -262,3 +262,17 @@ export interface Ruleset {
   status: string | null
   factor_count: number
 }
+
+/** 產出的書表檔案。形狀比照 axiosService 的 UploadedResponse（id / link） */
+export interface GeneratedForm {
+  table: string
+  filename: string
+  size: number
+  /** 相對於 VITE_API_URL 的下載路徑 */
+  link: string
+}
+
+export interface GeneratedForms {
+  id: string
+  files: GeneratedForm[]
+}

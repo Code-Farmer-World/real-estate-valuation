@@ -8,10 +8,11 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { compute, parseForms, review } from '@/services/valuationService'
+import { compute, generateForms, parseForms, review } from '@/services/valuationService'
 import type {
   ComputeResult,
   Correction,
+  GeneratedForms,
   ParseResult,
   ReviewResult,
 } from '@/types/case'
@@ -23,6 +24,10 @@ export const useCaseStore = defineStore('case', () => {
   const reviewed = ref<ReviewResult | null>(null)
   const loading = ref(false)
   const errorMessage = ref<string | null>(null)
+  const forms = ref<GeneratedForms | null>(null)
+  const formsLoading = ref(false)
+  /** 產表用的原始檔。書表要從同一份輸入產生，不能拿畫面上的值回推 */
+  const sourceFile = ref<File | null>(null)
 
   const table1 = computed(() => parsed.value?.tables['表1'] ?? null)
   const table52 = computed(() => parsed.value?.tables['表5-2'] ?? null)
@@ -45,6 +50,8 @@ export const useCaseStore = defineStore('case', () => {
     computed_.value = null
     reviewed.value = null
     fileName.value = file.name
+    sourceFile.value = file
+    forms.value = null
 
     try {
       const p = await parseForms(file)
@@ -70,12 +77,32 @@ export const useCaseStore = defineStore('case', () => {
     }
   }
 
+  /** 產出三張填好的官方書表。與辨識分開觸發：產表要花幾秒，
+   *  而多數時候使用者只想看審查結果。 */
+  async function makeForms() {
+    if (!sourceFile.value) return
+    formsLoading.value = true
+    errorMessage.value = null
+    try {
+      const r = await generateForms(sourceFile.value)
+      forms.value = r.result.data
+    } catch (e) {
+      const structured = e as { errorMessage?: string }
+      errorMessage.value =
+        structured?.errorMessage ?? (e instanceof Error ? e.message : '產表失敗')
+    } finally {
+      formsLoading.value = false
+    }
+  }
+
   function reset() {
     fileName.value = null
     parsed.value = null
     computed_.value = null
     reviewed.value = null
     errorMessage.value = null
+    forms.value = null
+    sourceFile.value = null
   }
 
   return {
@@ -90,7 +117,10 @@ export const useCaseStore = defineStore('case', () => {
     table4,
     firstComparable,
     correctionsByFactor,
+    forms,
+    formsLoading,
     analyze,
+    makeForms,
     reset,
   }
 })

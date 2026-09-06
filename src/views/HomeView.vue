@@ -9,11 +9,13 @@ import EvidencePanel from '@/components/EvidencePanel.vue'
 import Table1Panel from '@/components/Table1Panel.vue'
 import Table4Panel from '@/components/Table4Panel.vue'
 import Table52Panel from '@/components/Table52Panel.vue'
+import { formDownloadUrl } from '@/services/valuationService'
 import { useCaseStore } from '@/stores/case'
 
 const store = useCaseStore()
 const { fileName, parsed, computed: result, reviewed, loading, errorMessage } = storeToRefs(store)
 const { table1, table52, table4, firstComparable, correctionsByFactor } = storeToRefs(store)
+const { forms, formsLoading } = storeToRefs(store)
 
 const tab = ref<'表4' | '表5-2' | '表1'>('表4')
 const selectedFactor = ref<string | null>(null)
@@ -174,6 +176,30 @@ function onDrop(event: DragEvent) {
           <span class="lr">{{ l.findings > 0 ? `${l.findings} 處不符` : '相符' }}</span>
           <span class="lb">{{ l.basis }}</span>
         </div>
+      </section>
+
+      <section class="output">
+        <div class="oh">
+          <div>
+            <h2>產出官方格式書表</h2>
+            <p>
+              把引擎算出來的等級與修正率填回官方版面，輸出三張可交件的 PDF。
+              框線與欄位名都是從官方書表抽出來的，不是重畫的版面。
+            </p>
+          </div>
+          <button :disabled="formsLoading" @click="store.makeForms()">
+            {{ formsLoading ? '產出中……' : forms ? '重新產出' : '產出三張書表' }}
+          </button>
+        </div>
+        <ul v-if="forms" class="files">
+          <li v-for="f in forms.files" :key="f.filename">
+            <a :href="formDownloadUrl(f.link)" target="_blank" rel="noopener">
+              <b>{{ f.table }}</b>
+              <span class="fn">{{ f.filename }}</span>
+              <span class="fs">{{ Math.round(f.size / 1024) }} KB</span>
+            </a>
+          </li>
+        </ul>
       </section>
 
       <nav class="tabs">
@@ -427,6 +453,81 @@ h1 {
   font-size: 0.72rem;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.output {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  display: grid;
+  gap: 0.8rem;
+}
+.oh {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.output h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+.output p {
+  margin: 0;
+  max-width: 60ch;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.output button {
+  flex: none;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.output button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.files a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.files a:hover {
+  border-color: var(--accent);
+}
+.files .fn {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.files .fs {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .tabs {

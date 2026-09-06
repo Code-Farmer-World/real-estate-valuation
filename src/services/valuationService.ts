@@ -6,7 +6,14 @@
  */
 
 import { request, type ResponseStructure } from './axiosService'
-import type { ComputeResult, ParsedTables, ParseResult, ReviewResult, Ruleset } from '@/types/case'
+import type {
+  ComputeResult,
+  GeneratedForms,
+  ParsedTables,
+  ParseResult,
+  ReviewResult,
+  Ruleset,
+} from '@/types/case'
 
 /** 可用的規則集。Demo 現場抽換不同行政區的基準表要用 */
 export function listRulesets(): Promise<ResponseStructure<{ rulesets: Ruleset[] }>> {
@@ -40,4 +47,21 @@ export function compute(
 /** 審查模式：三層逐格比對，並算出賠償金差額 */
 export function review(tables: ParsedTables): Promise<ResponseStructure<ReviewResult>> {
   return request<ReviewResult>({ method: 'POST', url: '/api/review', data: { tables } })
+}
+
+/**
+ * 產出三張填好的官方書表。
+ *
+ * 回傳的是下載連結而不是檔案本身——回應信封規定 body 必須是 `{data, error}`，
+ * 二進位塞不進去（見 api/CONTRACT.md）。
+ */
+export function generateForms(file: File): Promise<ResponseStructure<GeneratedForms>> {
+  const form = new FormData()
+  form.append('file', file)
+  return request<GeneratedForms>({ method: 'POST', url: '/api/forms', data: form })
+}
+
+/** 把後端回的相對連結接成可直接開的絕對網址 */
+export function formDownloadUrl(link: string): string {
+  return `${import.meta.env.VITE_API_URL ?? ''}${link}`
 }
