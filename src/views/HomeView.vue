@@ -44,6 +44,26 @@ const allFindings = computed(() => {
   ]
 })
 
+/**
+ * 合理性檢查的結果。
+ *
+ * 與「審查發現」分開顯示，因為兩者要採取的行動不同：審查發現是估價師填錯，
+ * 要去改書表；合理性問題是這個數字本身不對，要先去確認辨識有沒有讀錯。
+ */
+const sanity = computed(() => reviewed.value?.sanity ?? [])
+const sanityErrors = computed(() => sanity.value.filter((s) => s.level === 'error'))
+
+/**
+ * 有 error 級的可疑值時，「相符」這兩個字會誤導人——三層檢核確實沒抓到不符，
+ * 但那是因為輸入本身就不可信。這時要先講輸入有問題。
+ */
+const verdictText = computed(() => {
+  const r = reviewed.value
+  if (!r) return ''
+  if (sanityErrors.value.length) return '輸入值有疑慮'
+  return r.verdict === 'match' ? '相符' : `${r.finding_count} 處不符`
+})
+
 /** 三層檢核的摘要。層名與法源對應作業手冊印刷頁 11–13 的審查重點 */
 const layerSummary = computed(() => {
   const r = reviewed.value
@@ -144,10 +164,27 @@ function onDrop(event: DragEvent) {
           <span class="v mono">{{ result?.benchmark_land_price_rounded?.toLocaleString() }}</span>
           <span class="unit">元/㎡</span>
         </div>
-        <div class="card" :class="reviewed?.verdict">
+        <div class="card" :class="sanityErrors.length ? 'mismatch' : reviewed?.verdict">
           <span class="k">審查結論</span>
-          <span class="v">{{ reviewed?.verdict === 'match' ? '相符' : `${reviewed?.finding_count} 處不符` }}</span>
+          <span class="v">{{ verdictText }}</span>
           <span class="unit">逐格比對 {{ reviewed?.checked_total }} 格</span>
+        </div>
+      </section>
+
+      <section v-if="sanity.length" class="sanity">
+        <h2>輸入值有疑慮（{{ sanity.length }}）</h2>
+        <p class="lead">
+          這一類不是「估價師填錯」，是<b>這個數字本身不合理</b>。
+          在排除辨識誤讀之前，下面的審查結果不宜採信。
+        </p>
+        <div v-for="(s, i) in sanity" :key="i" class="sitem" :class="s.level">
+          <div class="sh">
+            <span class="slv">{{ s.level === 'error' ? '幾乎確定誤讀' : '可疑' }}</span>
+            <b>{{ s.label }}</b>
+            <span class="sval mono">{{ JSON.stringify(s.value) }}</span>
+          </div>
+          <p class="sr">{{ s.reason }}</p>
+          <p class="spath mono">{{ s.path }}</p>
         </div>
       </section>
 
@@ -353,6 +390,71 @@ h1 {
 }
 .card.mismatch .v {
   color: var(--bad);
+}
+
+.sanity {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--warn);
+  border-radius: 10px;
+  background: var(--warn-bg);
+}
+.sanity h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--warn);
+}
+.sanity .lead {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.sanity .lead b {
+  color: var(--text);
+}
+.sitem {
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border-radius: 8px;
+  border-left: 3px solid var(--warn);
+}
+.sitem.error {
+  border-left-color: var(--bad);
+}
+.sh {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+.slv {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  background: var(--chip);
+  font-size: 0.72rem;
+}
+.sitem.error .slv {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.sval {
+  color: var(--bad);
+}
+.sr {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.spath {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.75;
 }
 
 .findings {

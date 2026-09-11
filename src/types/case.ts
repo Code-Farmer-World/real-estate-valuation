@@ -236,6 +236,22 @@ export interface NotCheckable {
   reason: string
 }
 
+/**
+ * 數值本身不合理的項目，與「估價師填錯」是兩件事。
+ *
+ * 存在的理由：單價若被誤讀成負數，引擎會算出負的補償金並回報「相符」——
+ * 不是壞掉，是自信地給出錯的答案。這一類必須單獨顯示，否則沒人知道要懷疑。
+ */
+export interface SanityIssue {
+  /** error：幾乎確定是誤讀｜warn：可疑，需人工確認 */
+  level: 'error' | 'warn'
+  /** 對應到 tables 的欄位路徑，例如 comparables[1].normal_unit_price */
+  path: string
+  label: string
+  value: unknown
+  reason: string
+}
+
 export interface ReviewResult {
   verdict: 'match' | 'mismatch'
   finding_count: number
@@ -244,6 +260,8 @@ export interface ReviewResult {
   checked_total: number
   layers: ReviewLayers
   not_checkable: NotCheckable[]
+  /** 合理性檢查結果。verdict 只反映三層檢核，所以這個要獨立看 */
+  sanity: SanityIssue[]
   price_impact: PriceImpact | null
 }
 
