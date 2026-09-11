@@ -71,8 +71,16 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 
 ## Project Setup
 
+本機已準備 Node.js 22.18.0，放在專案的 `.tools/`（不納入版控）。每次開新終端機先加入 PATH：
+
 ```sh
-npm install
+export PATH="$PWD/.tools/bin:$PATH"
+node --version
+npm --version
+```
+
+```sh
+npm ci
 ```
 
 ### Compile and Hot-Reload for Development

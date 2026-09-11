@@ -138,7 +138,7 @@ function onDrop(event: DragEvent) {
       </template>
       <template v-else>
         <b>把查估書表 PDF 拖進來</b>
-        <span class="hint">或點一下選檔。範本在 real-estate-valuation-doc/查估書表範本.pdf</span>
+        <span class="hint">或點一下選檔。範本在 docs/official/real-estate-valuation/查估書表範本.pdf</span>
       </template>
     </section>
 
