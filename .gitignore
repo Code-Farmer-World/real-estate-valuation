@@ -44,3 +44,7 @@ __screenshots__/
 
 test-results/
 playwright-report/
+
+# 簡報不進版控：投影片不是原始碼，內容會隨場合調整
+*.pptx
+*.key
