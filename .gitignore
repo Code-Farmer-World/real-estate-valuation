@@ -12,7 +12,10 @@ node_modules
 dist
 dist-ssr
 coverage
+
+# 憑證一律不入庫。注意 *.local 比對不到 .local.md，兩條都要有。
 *.local
+*.local.md
 
 # Editor directories and files
 .vscode/*
