@@ -143,11 +143,16 @@ function money(value: number | undefined): string {
         </li>
       </ul>
 
-      <!-- 填出來的格數。命題點名的痛點就是這些格子容易抄錯 -->
+      <!-- 填出來的格數。命題點名的痛點就是這些格子容易抄錯。
+           優劣等級在書表上是兩欄（左欄級數、右欄等級文字，
+           依新北市查估書表製作手冊第 5 章第 42 頁），所以細項數乘二才是格數。 -->
       <dl class="counts">
         <div>
           <dt>優劣等級</dt>
-          <dd>{{ survey.cell_counts.grades }} 格</dd>
+          <dd>
+            {{ survey.cell_counts.grades }} 項
+            <small>級數與等級文字共 {{ survey.cell_counts.grades * 2 }} 格</small>
+          </dd>
         </div>
         <div>
           <dt>修正百分比</dt>
@@ -436,6 +441,14 @@ button.ghost {
   margin: 0;
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* 優劣等級那一格的補充說明。書表上它是兩欄，數字容易被誤讀 */
+.counts dd small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted, #667);
 }
 
 table {

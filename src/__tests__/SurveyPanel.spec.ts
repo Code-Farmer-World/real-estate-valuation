@@ -127,7 +127,10 @@ describe('SurveyPanel', () => {
   it('顯示填出來的格數', () => {
     const { wrapper } = mountWith(fakeResult())
     const text = wrapper.text()
-    expect(text).toContain('116 格')
+    // 優劣等級在書表上是兩欄（級數與等級文字），所以 116 個細項寫進 232 格。
+    // 只寫「116 格」會被誤讀成整個等級區只填了 116 格。
+    expect(text).toContain('116 項')
+    expect(text).toContain('232 格')
     expect(text).toContain('87 格')
     expect(text).toContain('24 格')
   })
