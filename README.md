@@ -120,6 +120,28 @@ npm run test:e2e -- tests/example.spec.ts
 npm run test:e2e -- --debug
 ```
 
+`e2e/vue.spec.ts` 只驗空狀態與模式切換，不需要後端。
+
+`e2e/integration.spec.ts` 走完整條鏈（上傳勘查表 → 後端算 → 畫面出數字與依據），
+需要兩個前置條件，缺任一個就整支跳過而不是紅掉：
+
+1. 後端在 `VITE_API_URL`（預設 `http://localhost:8000`）跑著。
+   起法見 `../real-estate-valuation-py/README.md`，要帶 `VALUATION_DOC_DIR`
+   與 `VALUATION_TEMPLATE_DIR` 兩個環境變數。
+2. 一份填好的表3 勘查表 xlsx。預設找
+   `../real-estate-valuation-py/tmp/表3-填好.xlsx`，可用 `SURVEY_XLSX` 指定別的路徑。
+   產一份的方法：
+
+```sh
+cd ../real-estate-valuation-py
+.venv/bin/python -m xlsxform.cli --templates ../正式題目 --out tmp
+cp tmp/表3地價區段勘查表-filled.xlsx tmp/表3-填好.xlsx
+```
+
+它斷言的是已驗證過的數字（比準地比較價格 176,921、地價 177,000、
+總修正數 +23.50%／+14.75%／+14.75%）。這些值在個別因素以 0 計的前提下成立，
+局處把個別因素填進表4 之後會變，屆時要一起更新斷言。
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

@@ -25,7 +25,7 @@ async function mountApp() {
 describe('App', () => {
   it('掛載後渲染出標題與兩種模式的切換', async () => {
     const wrapper = await mountApp()
-    expect(wrapper.text()).toContain('不動產估價案件審查')
+    expect(wrapper.text()).toContain('不動產估價查估書表')
     expect(wrapper.text()).toContain('產出模式')
     expect(wrapper.text()).toContain('審查模式')
   })
@@ -51,6 +51,6 @@ describe('App', () => {
     // src/ 裡沒有任何 onMounted 會呼叫 API，這條守住那個前提。
     // 若哪天有人在 store 或元件加了自動載入，這裡會因為 fetch 未被 mock 而爆。
     const wrapper = await mountApp()
-    expect(wrapper.text()).toContain('不動產估價案件審查')
+    expect(wrapper.text()).toContain('不動產估價查估書表')
   })
 })
