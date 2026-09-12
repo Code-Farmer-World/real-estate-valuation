@@ -13,6 +13,7 @@ import type {
   ParseResult,
   ReviewResult,
   Ruleset,
+  SurveyResult,
 } from '@/types/case'
 
 /** 可用的規則集。Demo 現場抽換不同行政區的基準表要用 */
@@ -64,4 +65,19 @@ export function generateForms(file: File): Promise<ResponseStructure<GeneratedFo
 /** 把後端回的相對連結接成可直接開的絕對網址 */
 export function formDownloadUrl(link: string): string {
   return `${import.meta.env.VITE_API_URL ?? ''}${link}`
+}
+
+/**
+ * 產出模式：上傳填好的表3 勘查表 xlsx，算出表5-1 與表4 並產出可交件的書表。
+ *
+ * 與 `parseForms`（審查模式）方向相反。審查是「已經有填好的表，重算去比對」，
+ * 這條是「表是空的，算出每一格該填什麼」。
+ *
+ * 回傳含完整依據鏈：116 格等級與 87 格修正率的每一格都附量測值、級距條文、
+ * 基準表頁碼、矩陣查表結果與一句敘述。
+ */
+export function uploadSurveyXlsx(file: File): Promise<ResponseStructure<SurveyResult>> {
+  const form = new FormData()
+  form.append('file', file)
+  return request<SurveyResult>({ method: 'POST', url: '/api/survey/xlsx', data: form })
 }

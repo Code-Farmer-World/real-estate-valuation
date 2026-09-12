@@ -294,3 +294,138 @@ export interface GeneratedForms {
   id: string
   files: GeneratedForm[]
 }
+
+// ==================== 產出模式（POST /api/survey/xlsx） ====================
+//
+// 與審查模式方向相反。審查是「已經有填好的表，重算去比對」，產出是「表是空的，
+// 算出每一格該填什麼」。正式題目的表5-1 與表4 空白待填，而勘查表（表3）沒有
+// 優劣等級這一欄，所以審查那條路在那個案子沒有對照對象。
+//
+// 這一組型別刻意不重用上面的 ParsedTables。那些鍵是 `表1`／`表5-2`，
+// 對應金山範本的表別；產出模式走的是表3／表5-1，資料形狀也不同。
+
+/** 依據鏈裡的一側（比準地或比較標的） */
+export interface EvidenceSide {
+  segment: string
+  /** 判級所依據的量測值。`null` 表示未勾選或無此設施 */
+  value: FactValue
+  /** `null` 表示本案不適用，書表填「-」 */
+  grade: number | null
+  grade_label: string
+  /** 判級依據，例如「7m 落在「未滿8m」→ 第5級」 */
+  reason: string
+}
+
+/** 一個細項、一個比較標的的完整依據 */
+export interface FactorEvidence {
+  factor_id: string
+  label: string
+  group: string
+  unit: string | null
+  /** 評價基準明細表的頁碼，可對回原文 */
+  source_page: number | null
+  benchmark: EvidenceSide
+  comparable: EvidenceSide
+  /** 用字串傳，避免浮點誤差。例如 `"15.00"` */
+  correction_pct: string
+  /** 矩陣查表的依據，例如「矩陣[比準地=1 優][比較標的=5 劣] = 15.00%」 */
+  correction_reason: string
+  /** 是否計入群組小計 */
+  counted: boolean
+  /** 不計入的原因。兩種講法不同：移到表4 處理 vs 本案未予評定 */
+  exclusion_reason: string
+  /** 勘查表原載值與計算用值不同時的說明（例如容積率原載 260%、計算用 200%） */
+  override_note: string
+  /** 規則式產生的完整敘述，不經過模型 */
+  narrative: string
+}
+
+export interface GroupEvidence {
+  group: string
+  segment: string
+  subtotal_pct: string
+  counted: { label: string; pct: string }[]
+  skipped: { label: string; reason: string }[]
+  narrative: string
+}
+
+export interface SegmentEvidence {
+  segment: string
+  total_pct: string
+  factors: FactorEvidence[]
+  groups: GroupEvidence[]
+  narrative: string
+}
+
+/** 自我驗證的單一項目 */
+export interface VerificationCheck {
+  name: string
+  passed: boolean
+  detail: string
+}
+
+export interface VerificationReport {
+  passed: boolean
+  total: number
+  failed: number
+  checks: VerificationCheck[]
+}
+
+export interface SurveyTable5 {
+  groups: string[]
+  factor_ids: string[]
+  /** 區段編號 → factor_id → 等級文字。不適用者是 `"-"` */
+  grades: Record<string, Record<string, string>>
+  /** 區段編號 → 群組 → 小計 */
+  subtotals: Record<string, Record<string, number>>
+  /** 區段編號 → 總修正數 */
+  totals: Record<string, number>
+}
+
+export interface SurveyTable4 {
+  regional_pct: Record<string, number>
+  abs_sum_pct: Record<string, number>
+  similarity: Record<string, string>
+  weight_pct: Record<string, number>
+  trial_price: Record<string, number>
+  benchmark_comparison_price: number
+  /** 查估辦法第21條分段無條件進位後的值 */
+  benchmark_land_price: number
+}
+
+export interface SurveyCellCounts {
+  grades: number
+  corrections: number
+  subtotals: number
+  totals: number
+}
+
+export interface SurveyReadWarning {
+  segment: string
+  factor_id: string
+  reason: string
+}
+
+export interface SurveyFile {
+  filename: string
+  size: number
+  link: string
+}
+
+export interface SurveyResult {
+  id: string
+  case_id: string
+  ruleset_id: string
+  benchmark: string
+  comparables: string[]
+  cell_counts: SurveyCellCounts
+  table5_1: SurveyTable5
+  table4: SurveyTable4
+  /** 個別因素以 0 計這件事的說明。少了它試算價格會被當成完整答案 */
+  premise: string
+  evidence: SegmentEvidence[]
+  verification: VerificationReport
+  /** 該有值卻讀到空白的欄位。不中斷但要讓使用者看到 */
+  read_warnings: SurveyReadWarning[]
+  files: SurveyFile[]
+}

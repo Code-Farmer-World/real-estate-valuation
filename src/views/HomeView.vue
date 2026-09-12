@@ -6,11 +6,15 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import EvidencePanel from '@/components/EvidencePanel.vue'
+import SurveyPanel from '@/components/SurveyPanel.vue'
 import Table1Panel from '@/components/Table1Panel.vue'
 import Table4Panel from '@/components/Table4Panel.vue'
 import Table52Panel from '@/components/Table52Panel.vue'
 import { formDownloadUrl } from '@/services/valuationService'
 import { useCaseStore } from '@/stores/case'
+
+/** 產出模式與審查模式。預設產出模式，那是正式題目要的 */
+const mode = ref<'survey' | 'review'>('survey')
 
 const store = useCaseStore()
 const { fileName, parsed, computed: result, reviewed, loading, errorMessage } = storeToRefs(store)
@@ -115,10 +119,43 @@ function onDrop(event: DragEvent) {
     <header>
       <h1>不動產估價案件審查</h1>
       <p class="sub">
-        上傳查估書表 PDF，系統辨識表1、表5-2、表4，依評價基準明細表重算，
-        逐格比對估價師填的值。<b>每個數字都指得回來源，沒有任何一個是模型生成的。</b>
+        依評價基準明細表計算與比對查估書表。<b>每個數字都指得回來源，沒有任何一個是模型生成的。</b>
       </p>
     </header>
+
+    <!-- 兩種模式各自獨立。產出走 xlsx（格位對映，結構化），
+         審查走 PDF（座標比對，綁版面）。其中一條失敗不影響另一條。 -->
+    <nav class="modes" role="tablist" aria-label="選擇模式">
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="mode === 'survey'"
+        :class="{ on: mode === 'survey' }"
+        @click="mode = 'survey'"
+      >
+        產出模式
+        <small>從勘查表算出該填什麼</small>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="mode === 'review'"
+        :class="{ on: mode === 'review' }"
+        @click="mode = 'review'"
+      >
+        審查模式
+        <small>比對已填好的書表</small>
+      </button>
+    </nav>
+
+    <SurveyPanel v-if="mode === 'survey'" />
+
+    <template v-else>
+    <p class="sub mode-note">
+      上傳查估書表 PDF，系統辨識表1、表5-2、表4，依評價基準明細表重算，
+      逐格比對估價師填的值。此模式的版面辨識已對金山範本校準，
+      換一種版面需重新校準格位。
+    </p>
 
     <section
       class="drop"
@@ -282,10 +319,46 @@ function onDrop(event: DragEvent) {
         </p>
       </section>
     </template>
+    </template>
   </div>
 </template>
 
 <style scoped>
+.modes {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.modes button {
+  display: grid;
+  gap: 0.15rem;
+  border: 1px solid var(--line, #ccd);
+  background: transparent;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.modes button.on {
+  border-color: var(--accent, #35a);
+  color: var(--accent, #35a);
+  font-weight: 600;
+}
+
+.modes small {
+  font-size: 0.76rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.mode-note {
+  margin-top: 0;
+}
+
 .page {
   max-width: 1200px;
   margin: 0 auto;

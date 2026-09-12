@@ -8,13 +8,21 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { compute, generateForms, parseForms, review } from '@/services/valuationService'
+import {
+  compute,
+  generateForms,
+  parseForms,
+  review,
+  uploadSurveyXlsx,
+} from '@/services/valuationService'
 import type {
   ComputeResult,
   Correction,
+  FactorEvidence,
   GeneratedForms,
   ParseResult,
   ReviewResult,
+  SurveyResult,
 } from '@/types/case'
 
 export const useCaseStore = defineStore('case', () => {
@@ -28,6 +36,35 @@ export const useCaseStore = defineStore('case', () => {
   const formsLoading = ref(false)
   /** 產表用的原始檔。書表要從同一份輸入產生，不能拿畫面上的值回推 */
   const sourceFile = ref<File | null>(null)
+
+  // ---------- 產出模式 ----------
+  // 與審查模式各自獨立。審查走 PDF（parser 綁版面，對金山範本可用），
+  // 產出走 xlsx（格位對映，結構化）。兩條路的資料形狀不同，不共用 state，
+  // 免得其中一條的失敗污染另一條。
+  const survey = ref<SurveyResult | null>(null)
+  const surveyLoading = ref(false)
+  const surveyFileName = ref<string | null>(null)
+  /** 依據面板目前選中的比較標的 */
+  const surveySegment = ref<string | null>(null)
+
+  /** 選中標的的依據。切換標的只換這一份，不必重打 API */
+  const surveyEvidence = computed(() => {
+    if (!survey.value) return null
+    const seg = surveySegment.value ?? survey.value.comparables[0]
+    return survey.value.evidence.find((e) => e.segment === seg) ?? null
+  })
+
+  /** factor_id → 依據，供表格逐列查詢 */
+  const surveyEvidenceByFactor = computed(() => {
+    const map: Record<string, FactorEvidence> = {}
+    for (const f of surveyEvidence.value?.factors ?? []) map[f.factor_id] = f
+    return map
+  })
+
+  /** 驗證未通過的項目。空陣列代表十項全過 */
+  const surveyFailures = computed(
+    () => survey.value?.verification.checks.filter((c) => !c.passed) ?? [],
+  )
 
   const table1 = computed(() => parsed.value?.tables['表1'] ?? null)
   const table52 = computed(() => parsed.value?.tables['表5-2'] ?? null)
@@ -95,6 +132,44 @@ export const useCaseStore = defineStore('case', () => {
     }
   }
 
+  /**
+   * 產出模式：上傳填好的表3 勘查表 xlsx。
+   *
+   * 一支 API 就回傳計算結果、依據鏈、自我驗證與檔案連結，所以不像審查模式
+   * 需要串三支。
+   */
+  async function analyzeSurvey(file: File) {
+    surveyLoading.value = true
+    errorMessage.value = null
+    survey.value = null
+    surveySegment.value = null
+    surveyFileName.value = file.name
+    try {
+      const r = await uploadSurveyXlsx(file)
+      const data = r.result.data
+      if (!data) throw new Error(r.result.error?.message ?? '計算失敗')
+      survey.value = data
+      surveySegment.value = data.comparables[0] ?? null
+    } catch (e) {
+      const structured = e as { errorMessage?: string }
+      errorMessage.value =
+        structured?.errorMessage ?? (e instanceof Error ? e.message : '未預期的錯誤')
+    } finally {
+      surveyLoading.value = false
+    }
+  }
+
+  function selectSurveySegment(segment: string) {
+    surveySegment.value = segment
+  }
+
+  function resetSurvey() {
+    survey.value = null
+    surveyFileName.value = null
+    surveySegment.value = null
+    errorMessage.value = null
+  }
+
   function reset() {
     fileName.value = null
     parsed.value = null
@@ -122,5 +197,15 @@ export const useCaseStore = defineStore('case', () => {
     analyze,
     makeForms,
     reset,
+    survey,
+    surveyLoading,
+    surveyFileName,
+    surveySegment,
+    surveyEvidence,
+    surveyEvidenceByFactor,
+    surveyFailures,
+    analyzeSurvey,
+    selectSurveySegment,
+    resetSurvey,
   }
 })
