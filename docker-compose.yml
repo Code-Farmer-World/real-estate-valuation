@@ -1,0 +1,31 @@
+# 只有前端。後端是另一個 repo（../real-estate-valuation-py），各自獨立部署、
+# 只透過 HTTP 溝通，所以不放進同一個 compose。
+#
+#   docker compose up -d --build        啟動，http://localhost:2180
+#   docker compose build --no-cache     重新建構（換 API 位址時要這個）
+#   docker compose logs -f web          看日誌
+#   docker compose ps                   看狀態
+#   docker compose down                 停掉
+#   docker compose down --rmi all       連鏡像一起清掉
+#
+# ⚠️ API 位址是 build 期烤進 bundle 的（見 .env.production），不是這裡的環境變數。
+#    改了後端網址一定要重 build，只 restart 不會生效。
+#
+# ⚠️ 後端的 CORS 白名單要放行前端的來源，否則畫面出得來、但每一支 API 都會失敗。
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        # 決定 vite build --mode，也就是載入哪一個 .env 檔
+        BUILD_MODE: production
+
+    image: real-estate-valuation-frontend
+    container_name: real-estate-valuation-frontend
+
+    ports:
+      # 埠被占用時用 WEB_PORT 換外部埠，容器內固定 80。
+      - "${WEB_PORT:-2180}:80"
+
+    restart: unless-stopped
