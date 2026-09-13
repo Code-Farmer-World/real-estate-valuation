@@ -48,6 +48,40 @@
 
 後端需另外啟動，預設 `http://localhost:8000`，位置設定在 `.env.development`。
 
+## 系統導覽
+
+畫面右下角的浮動按鈕列出所有導覽。導覽**不會自動跳出來**打斷操作，需要時自己點開，
+清單會標示哪幾份還沒看過（記在 `localStorage` 的 `seenTours`）。
+
+導覽內容是**資料不是程式碼**：在 `src/tours/` 新增一份 JSON 就會被自動收錄，
+不必改任何 `.ts` 或 `.vue`。
+
+```
+src/tours/*.json      導覽定義。一份一個檔，order 決定在選單上的順序
+src/tours/index.ts    載入與執行期驗證。格式錯了開發環境直接拋錯，正式環境略過該份
+src/types/tour.ts     定義檔的欄位與各欄的意思
+src/stores/tour.ts    播放狀態。用 driver.js 播，跨模式／分頁時會先切畫面再等錨點出現
+src/components/TourLauncher.vue   右下角的入口
+```
+
+每個步驟用 `anchor` 指向畫面上的 `data-tour="..."`，並可用 `mode`／`tab`
+指定這一步要停在哪個模式、哪張表——導覽會先把畫面切過去，等錨點出現再顯示說明。
+
+幾個容易踩到的欄位：
+
+- `requiresData`：這份導覽需要先上傳哪一種檔案。沒有資料時畫面上根本沒有那些區塊，
+  所以清單上會停用並寫明缺什麼，而不是讓人點了才卡住。
+- `optional`：這一步指向的區塊可能不存在（例如沒有不符之處就沒有「審查發現」區）。
+  設 `true` 時找不到錨點就整步略過，而不是顯示一個指著空白的泡泡。
+
+**錨點改名或誤刪會被測試擋下來**——這正是導覽最容易壞掉又最不容易被發現的地方
+（找不到錨點時只會默默退化成置中泡泡，不會報錯）：
+
+```sh
+npx vitest run src/__tests__/tours.spec.ts   # 掃原始碼確認每個錨點都還宣告著
+npm run test:e2e:tour                        # 把導覽真的走一遍（見下方 e2e 說明）
+```
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
@@ -121,6 +155,17 @@ npm run test:e2e -- --debug
 ```
 
 `e2e/vue.spec.ts` 只驗空狀態與模式切換，不需要後端。
+
+`e2e/tour.spec.ts` 掃過 `src/tours/` 的每一份定義，從右下角的導覽按鈕啟動、
+一步步按下去，確認每個 `data-tour` 錨點都在畫面上、被高亮、而且在可視範圍內。
+不需要資料的導覽（新手上路）隨時都跑；需要先上傳檔案的那兩份沿用下面
+`integration.spec.ts` 的前置條件，缺了就整支跳過。審查模式的那份還需要一份
+填好的查估書表 PDF，repo 裡目前沒有，所以恆跳過——有了 fixture 之後補進
+`prepareData()` 即可，其餘邏輯是共用的。
+
+```sh
+npm run test:e2e:tour
+```
 
 `e2e/integration.spec.ts` 走完整條鏈（上傳勘查表 → 後端算 → 畫面出數字與依據），
 需要兩個前置條件，缺任一個就整支跳過而不是紅掉：

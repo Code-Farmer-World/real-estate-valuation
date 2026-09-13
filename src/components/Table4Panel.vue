@@ -25,7 +25,7 @@ function show(side: Table4Comparable | Table4['benchmark'], factorId: string) {
 </script>
 
 <template>
-  <div class="wrap">
+  <div class="wrap" data-tour="review-table4">
     <div class="meta">
       <span><b>比準地</b> {{ table.benchmark.parcel }}</span>
       <span><b>比較標的{{ comparable.index }}</b> {{ comparable.parcel }}</span>

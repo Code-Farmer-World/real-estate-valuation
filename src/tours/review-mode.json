@@ -1,0 +1,78 @@
+{
+  "id": "review-mode",
+  "name": "審查模式：比對已填好的書表",
+  "order": 30,
+  "requiresData": "review",
+  "steps": [
+    {
+      "anchor": "review-cards",
+      "title": "五張卡就是這次審查的結論",
+      "description": "最右邊那張是審查結論，下面標了這次總共逐格比對了幾格。中間兩張是重算出來的比準地比較價格與比準地地價——注意這是系統依官方評價基準自己算的，不是從 PDF 讀出來的數字，兩者相不相符正是這個模式在回答的問題。",
+      "mode": "review",
+      "tab": null,
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "review-sanity",
+      "title": "這一區出現時，先別看下面的審查結果",
+      "description": "「輸入值有疑慮」和「審查發現」是兩件事，所以分開顯示——因為要採取的行動不同。審查發現是估價師填錯了，要去改書表；輸入值有疑慮是這個數字本身就不合理，通常代表 PDF 辨識讀錯了，要先回去確認原始書表上到底寫什麼。在排除誤讀之前，下面的比對結果不宜採信。標成「幾乎確定誤讀」的那幾筆尤其要先處理。這一區只有在真的抓到可疑值時才會出現。",
+      "mode": "review",
+      "tab": null,
+      "optional": true,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "review-findings",
+      "title": "不符之處逐筆列出，每一筆都附法源",
+      "description": "每一筆都寫明是在哪一層抓到的、表上填了什麼、應該是什麼，以及依據哪一條規則判定。最底下會給出這些不符換算成單價的差額——那是這次審查在金額上的實際衝擊，也是複查報告裡真正有份量的一句話。這一區只有在確實抓到不符時才會出現；沒有不符之處時整區不顯示。",
+      "mode": "review",
+      "tab": null,
+      "optional": true,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "review-layers",
+      "title": "三層檢核，各查各的",
+      "description": "第一層查表1 內部：量測值和估價師自己填的等級對不對得起來。第二層查表1 到表5-2：兩張表的等級必須一致，依審查重點第 vi 項。第三層查表5-2 到表4：總修正數必須相符，依審查重點第 vii 項。三層分開顯示是因為抓到的問題性質不同——第一層是判級錯，第二、三層是抄錄錯。每張卡上都標了該層實際查了幾格。",
+      "mode": "review",
+      "tab": null,
+      "optional": false,
+      "side": "top",
+      "align": "start"
+    },
+    {
+      "anchor": "review-tabs",
+      "title": "三張表都在這裡，可以逐張看",
+      "description": "表4 比較法調查估價表、表5-2 影響地價區域因素分析明細表、表1 地價區段勘查表——系統從 PDF 辨識出來的內容原樣呈現在這裡，方便對照原始書表確認有沒有讀錯。要提醒的是：這個模式的版面辨識是對金山範本校準過的，換一種版面的書表需要重新校準格位，讀出來的東西才會對。",
+      "mode": "review",
+      "tab": "表4",
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "review-evidence",
+      "title": "點左邊任一格，這裡就說明它怎麼來的",
+      "description": "和產出模式一樣的原則：每個數字都要指得回來源。點表4 裡任一個修正細項，這個面板會顯示該格的判級依據、矩陣查表的結果，以及它在原始 PDF 上的位置。最後那一項是審查模式特有的——因為要舉證「估價師表上寫的就是這個值」，必須指得回 PDF 的哪一頁、哪個座標。",
+      "mode": "review",
+      "tab": "表4",
+      "optional": false,
+      "side": "left",
+      "align": "start"
+    },
+    {
+      "anchor": "review-output",
+      "title": "審查完也可以直接產出正確版本",
+      "description": "把引擎算出來的等級與修正率填回官方版面，輸出三張可交件的 PDF。框線與欄位名是從官方書表抽出來的，不是重畫的版面，所以出來的東西和原本的書表長得一樣。產表要花幾秒，所以和辨識分開觸發——多數時候使用者只想看審查結果，不需要每次都等產表。",
+      "mode": "review",
+      "tab": null,
+      "optional": false,
+      "side": "top",
+      "align": "start"
+    }
+  ]
+}

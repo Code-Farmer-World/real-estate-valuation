@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import SurveyPanel from '../components/SurveyPanel.vue'
 import { useCaseStore } from '../stores/case'
+import { findTourById } from '../tours'
 import type { SurveyResult } from '../types/case'
 
 /**
@@ -226,5 +227,24 @@ describe('SurveyPanel', () => {
     )
     expect(wrapper.text()).toContain('讀到空白')
     expect(wrapper.text()).toContain('regional.nature.sunlight')
+  })
+
+  it('產出模式導覽要指的錨點都在畫面上', () => {
+    // 導覽找不到錨點時會退化成置中泡泡，不會報錯，所以壞掉不容易被發現。
+    // e2e/tour.spec.ts 會把整份導覽走一遍，但那支需要後端起著才跑得動；
+    // 這裡用同一份假資料先把「錨點還在不在」擋下來，改名或誤刪當場就紅。
+    const tour = findTourById('survey-mode')
+    expect(tour).not.toBeNull()
+
+    const { wrapper } = mountWith(fakeResult())
+
+    const missing = tour!.steps
+      .filter((step) => step.anchor !== null)
+      .filter((step) => !wrapper.find(`[data-tour="${step.anchor}"]`).exists())
+      .map((step) => `「${step.title}」→ data-tour="${step.anchor}"`)
+
+    // 列出來的每一筆都是導覽指得到、畫面上卻沒有的錨點：把 data-tour 加回原本的元素，
+    // 或同步修改 src/tours/survey-mode.json 的那一步。
+    expect(missing).toStrictEqual([])
   })
 })
