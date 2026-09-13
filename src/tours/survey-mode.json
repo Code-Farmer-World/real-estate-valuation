@@ -1,0 +1,78 @@
+{
+  "id": "survey-mode",
+  "name": "產出模式：從勘查表算出該填什麼",
+  "order": 20,
+  "requiresData": "survey",
+  "steps": [
+    {
+      "anchor": "survey-verify",
+      "title": "先看這一條，它決定下面的數字能不能信",
+      "description": "自我驗證刻意排在結果區的最前面。系統算完之後會回頭驗自己：總修正數與各群組小計對不對得起來、權重加總是不是 100%、試算價格與比準地價格的關係合不合理，共十項。這一條沒過，下面的價格與依據鏈就不必細看了——不是「可能有誤差」，是那份輸出本身不該拿去交件。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "survey-premise",
+      "title": "這個前提不講清楚，下面的價格會被誤讀",
+      "description": "表4 的個別因素（項目7 至25）需要宗地的個別條件資料，題目沒有提供，依表4 註記那部分由地價查估單位自行辦理。所以本次計算一律以 0% 計。這句話會一起寫進產出的書表全案備註，不是只顯示在畫面上。看到下面的試算價格時要記得：它是在個別因素為 0 的前提下算出來的，局處把個別因素填進表4 之後數字會變。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "survey-counts",
+      "title": "系統替你填掉了多少格",
+      "description": "這幾個數字是命題點名的痛點——這些格子多、重複、容易抄錯。要注意「優劣等級 116 項」不等於 116 格：優劣等級在書表上是兩欄（左欄級數、右欄等級文字，依新北市查估書表製作手冊第 5 章第 42 頁），所以實際動到的是 232 格。這裡刻意寫「項」並在旁邊註明格數，因為早先版本寫成「116 格」而交付檔案實際動 232 格，對不起來。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "survey-result",
+      "title": "表4 的價格怎麼來的",
+      "description": "每個比較標的先算出區域因素調整百分率，再由調整百分率的絕對值加總決定相近程度與權重——絕對值加總越小代表和比準地越像，權重就越高。試算價格依權重加權平均得到比準地比較價格，再依查估辦法第21條分段進位成比準地地價。表格最後兩列就是這兩個數字，它們是整份書表的結論。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "top",
+      "align": "center"
+    },
+    {
+      "anchor": "survey-evidence-tabs",
+      "title": "切換比較標的，依據鏈跟著換",
+      "description": "每個比較標的都有自己的一整份依據鏈。切換時不會重打 API，資料在上傳那一次就全部拿回來了，所以切起來是即時的。分頁上的百分比是該標的的總修正數，可以直接和上面表格裡的區域因素調整百分率對照。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "survey-factor-row",
+      "title": "點開任一列，看這一格是怎麼判出來的",
+      "description": "這是整個系統最該被檢查的地方。每一列都能點開，裡面有三件事：比準地為什麼判這一級、比較標的為什麼判那一級、以及這兩級在評價基準明細表的矩陣裡查出來的修正率是多少，最右邊還標了它出自基準表第幾頁。灰掉的列代表沒有計入小計，點開會寫明為什麼被排除。要質疑任何一個數字，就從點開它開始——這就是「每個數字都指得回來源」的實際樣子。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "top",
+      "align": "start"
+    },
+    {
+      "anchor": "survey-files",
+      "title": "live 與 final 是兩份不同用途的檔案",
+      "description": "活版（live）裡的加總與四則運算保留成 Excel 公式，所以把個別因素填進表4 之後，下游的試算價格與比準地地價會自動跟著更新——那是要交給局處繼續填的版本。定版（final）則把所有公式都算成數值，用於對照答案與轉 PDF。兩份的數字一致，差別只在公式還在不在。",
+      "mode": "survey",
+      "tab": null,
+      "optional": false,
+      "side": "top",
+      "align": "start"
+    }
+  ]
+}

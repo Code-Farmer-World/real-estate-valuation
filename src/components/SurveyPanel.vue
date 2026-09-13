@@ -97,6 +97,7 @@ function money(value: number | undefined): string {
 
     <div
       class="drop"
+      data-tour="survey-drop"
       @click="pick"
       @dragover.prevent
       @drop.prevent="onDrop"
@@ -122,7 +123,7 @@ function money(value: number | undefined): string {
 
     <template v-if="survey">
       <!-- 自我驗證。放在最前面，因為它決定下面的數字能不能信 -->
-      <div class="verify" :class="{ bad: !survey.verification.passed }">
+      <div class="verify" :class="{ bad: !survey.verification.passed }" data-tour="survey-verify">
         <strong>
           {{ survey.verification.passed ? '自我驗證通過' : '自我驗證未通過' }}
         </strong>
@@ -135,7 +136,7 @@ function money(value: number | undefined): string {
         </ul>
       </div>
 
-      <p class="premise">{{ survey.premise }}</p>
+      <p class="premise" data-tour="survey-premise">{{ survey.premise }}</p>
 
       <ul v-if="survey.read_warnings.length" class="warnings">
         <li v-for="(w, i) in survey.read_warnings" :key="i">
@@ -146,7 +147,7 @@ function money(value: number | undefined): string {
       <!-- 填出來的格數。命題點名的痛點就是這些格子容易抄錯。
            優劣等級在書表上是兩欄（左欄級數、右欄等級文字，
            依新北市查估書表製作手冊第 5 章第 42 頁），所以細項數乘二才是格數。 -->
-      <dl class="counts">
+      <dl class="counts" data-tour="survey-counts">
         <div>
           <dt>優劣等級</dt>
           <dd>
@@ -169,7 +170,7 @@ function money(value: number | undefined): string {
       </dl>
 
       <!-- 表4 的結果 -->
-      <table class="result">
+      <table class="result" data-tour="survey-result">
         <caption>
           表4 比較法調查估價表（案號 {{ survey.case_id }}）
         </caption>
@@ -207,7 +208,7 @@ function money(value: number | undefined): string {
 
       <!-- 依據鏈。切換標的只換這一份，不必重打 API -->
       <div class="evidence">
-        <div class="tabs" role="tablist" aria-label="選擇比較標的">
+        <div class="tabs" data-tour="survey-evidence-tabs" role="tablist" aria-label="選擇比較標的">
           <button
             v-for="seg in survey.comparables"
             :key="seg"
@@ -224,7 +225,7 @@ function money(value: number | undefined): string {
 
         <p v-if="surveyEvidence" class="narrative">{{ surveyEvidence.narrative }}</p>
 
-        <div v-for="g in grouped" :key="g.group" class="group">
+        <div v-for="(g, gi) in grouped" :key="g.group" class="group">
           <h3>
             {{ g.group }}
             <span class="num">{{ pct(g.subtotal) }}</span>
@@ -240,10 +241,11 @@ function money(value: number | undefined): string {
               </tr>
             </thead>
             <tbody>
-              <template v-for="f in g.factors" :key="f.factor_id">
+              <template v-for="(f, fi) in g.factors" :key="f.factor_id">
                 <tr
                   class="row"
                   :class="{ muted: !f.counted, open: openFactor === f.factor_id }"
+                  :data-tour="gi === 0 && fi === 0 ? 'survey-factor-row' : undefined"
                   @click="toggle(f.factor_id)"
                   role="button"
                   tabindex="0"
@@ -287,7 +289,7 @@ function money(value: number | undefined): string {
       </div>
 
       <!-- 產出的檔案 -->
-      <div class="files">
+      <div class="files" data-tour="survey-files">
         <h3>可交件的檔案</h3>
         <ul>
           <li v-for="f in survey.files" :key="f.filename">

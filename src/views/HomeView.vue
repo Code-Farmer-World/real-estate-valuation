@@ -10,18 +10,24 @@ import SurveyPanel from '@/components/SurveyPanel.vue'
 import Table1Panel from '@/components/Table1Panel.vue'
 import Table4Panel from '@/components/Table4Panel.vue'
 import Table52Panel from '@/components/Table52Panel.vue'
+import TourLauncher from '@/components/TourLauncher.vue'
 import { formDownloadUrl } from '@/services/valuationService'
 import { useCaseStore } from '@/stores/case'
-
-/** 產出模式與審查模式。預設產出模式，那是正式題目要的 */
-const mode = ref<'survey' | 'review'>('survey')
+import { useUiStore } from '@/stores/ui'
 
 const store = useCaseStore()
 const { fileName, parsed, computed: result, reviewed, loading, errorMessage } = storeToRefs(store)
 const { table1, table52, table4, firstComparable, correctionsByFactor } = storeToRefs(store)
 const { forms, formsLoading } = storeToRefs(store)
 
-const tab = ref<'表4' | '表5-2' | '表1'>('表4')
+/**
+ * 模式（產出／審查）與分頁。放在 store 而不是這裡的區域 ref，
+ * 因為導覽要能「先切到該模式再指元素」——狀態被兩處共用就該提升。
+ * 預設仍是產出模式，那是正式題目要的。
+ */
+const uiStore = useUiStore()
+const { mode, tab } = storeToRefs(uiStore)
+
 const selectedFactor = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -127,7 +133,7 @@ function onDrop(event: DragEvent) {
 
     <!-- 兩種模式各自獨立。產出走 xlsx（格位對映，結構化），
          審查走 PDF（座標比對，綁版面）。其中一條失敗不影響另一條。 -->
-    <nav class="modes" role="tablist" aria-label="選擇模式">
+    <nav class="modes" data-tour="mode-tabs" role="tablist" aria-label="選擇模式">
       <button
         type="button"
         role="tab"
@@ -162,6 +168,7 @@ function onDrop(event: DragEvent) {
     <section
       class="drop"
       :class="{ busy: loading }"
+      data-tour="review-drop"
       @click="fileInput?.click()"
       @dragover.prevent
       @drop.prevent="onDrop"
@@ -184,7 +191,7 @@ function onDrop(event: DragEvent) {
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
     <template v-if="parsed">
-      <section class="cards">
+      <section class="cards" data-tour="review-cards">
         <div class="card">
           <span class="k">案號</span>
           <span class="v mono">{{ parsed.case_id }}</span>
@@ -210,7 +217,7 @@ function onDrop(event: DragEvent) {
         </div>
       </section>
 
-      <section v-if="sanity.length" class="sanity">
+      <section v-if="sanity.length" class="sanity" data-tour="review-sanity">
         <h2>輸入值有疑慮（{{ sanity.length }}）</h2>
         <p class="lead">
           這一類不是「估價師填錯」，是<b>這個數字本身不合理</b>。
@@ -227,7 +234,7 @@ function onDrop(event: DragEvent) {
         </div>
       </section>
 
-      <section v-if="allFindings.length" class="findings">
+      <section v-if="allFindings.length" class="findings" data-tour="review-findings">
         <h2>審查發現</h2>
         <div v-for="(f, i) in allFindings" :key="i" class="finding">
           <div class="fh">
@@ -245,7 +252,7 @@ function onDrop(event: DragEvent) {
         </p>
       </section>
 
-      <section v-if="reviewed" class="layers">
+      <section v-if="reviewed" class="layers" data-tour="review-layers">
         <div v-for="l in layerSummary" :key="l.key" class="layer-card" :class="{ bad: l.findings > 0 }">
           <span class="ln">{{ l.name }}</span>
           <span class="lc">{{ l.checked }} 格</span>
@@ -254,7 +261,7 @@ function onDrop(event: DragEvent) {
         </div>
       </section>
 
-      <section class="output">
+      <section class="output" data-tour="review-output">
         <div class="oh">
           <div>
             <h2>產出官方格式書表</h2>
@@ -278,7 +285,7 @@ function onDrop(event: DragEvent) {
         </ul>
       </section>
 
-      <nav class="tabs">
+      <nav class="tabs" data-tour="review-tabs">
         <button
           v-for="t in (['表4', '表5-2', '表1'] as const)"
           :key="t"
@@ -322,6 +329,9 @@ function onDrop(event: DragEvent) {
       </section>
     </template>
     </template>
+
+    <!-- 導覽入口。浮在右下角，兩種模式下都在 -->
+    <TourLauncher />
   </div>
 </template>
 
@@ -330,6 +340,9 @@ function onDrop(event: DragEvent) {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.2rem;
+  /* 只佔兩個按鈕的寬度。外觀不變（本來就沒有底色與框線、按鈕也靠左），
+     但導覽的遮罩挖洞是照元素實際範圍挖的，撐滿整列會框住一大片空白。 */
+  width: fit-content;
 }
 
 .modes button {

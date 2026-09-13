@@ -16,7 +16,7 @@ defineProps<{
 </script>
 
 <template>
-  <aside class="evidence">
+  <aside class="evidence" data-tour="review-evidence">
     <h3>依據</h3>
 
     <p v-if="!correction && !source" class="hint">
